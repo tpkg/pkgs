@@ -3,7 +3,7 @@
 set -e
 
 PKG=collectd
-VER=5.1.0
+VER=5.1.1
 PKGVER=1
 OS=`tpkg --qenv | grep 'Operating System' | awk '{print $NF}'`
 if echo $OS | egrep 'RedHat|CentOS'
@@ -49,8 +49,8 @@ files:
   files:
   - path: /opt/tpkg/etc/init.d/collectd
     init: {}
-	posix:
-	  perms: 0755
+    posix:
+      perms: 0755
 EOF
 mkdir $pkgdir/root
 # Install
