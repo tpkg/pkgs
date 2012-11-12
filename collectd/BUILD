@@ -3,7 +3,7 @@
 set -e
 
 PKG=collectd
-VER=4.10.4
+VER=5.1.0
 PKGVER=1
 OS=`tpkg --qenv | grep 'Operating System' | awk '{print $NF}'`
 if echo $OS | egrep 'RedHat|CentOS'
@@ -11,7 +11,7 @@ then
         # Save folks from having to build separate packages for Red Hat and
         # CentOS
         OSMAJOR=`echo $OS | cut -d- -f2`
-        OS="RedHat-$OSMAJOR,CentOS-$OSMAJOR"
+        OS="RedHat-$OSMAJOR, CentOS-$OSMAJOR"
 fi
 ARCH=`tpkg --qenv | grep 'Architecture' | awk '{print $NF}'`
 
@@ -36,14 +36,22 @@ cd $PKG-$VER
 ./configure --prefix=/opt/tpkg --datarootdir=/opt/tpkg
 make
 pkgdir=`mktemp -d -t tpkg.XXXXXX`
-cat ../../tpkg.xml | \
+cat ../../tpkg.yml | \
 	sed "s/NAME/$PKG/" | \
-	sed "s/VERSION/$VER/" | \
+	sed "s,VERSION,$VER," | \
 	sed "s/PKGVER/$PKGVER/" | \
 	sed "s/OS/$OS/" | \
-	sed "s/ARCH/$ARCH/" |
-	sed '/<files>/a\
-<file><path>/opt/tpkg/etc/init.d/collectd</path><posix><perms>0755</perms></posix><init/></file>' > $pkgdir/tpkg.xml
+	sed "s/ARCH/$ARCH/" \
+	> $pkgdir/tpkg.yml
+cat <<EOF >> $pkgdir/tpkg.yml
+externals:
+files:
+  files:
+  - path: /opt/tpkg/etc/init.d/collectd
+    init: {}
+	posix:
+	  perms: 0755
+EOF
 mkdir $pkgdir/root
 # Install
 make install DESTDIR=$pkgdir/root
