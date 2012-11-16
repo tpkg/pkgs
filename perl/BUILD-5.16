@@ -3,9 +3,9 @@
 PKG=perl
 # If you update the version be sure to add the old version to PREVIOUS
 # below.
-VER=5.8.9
-MAJORVER=5.8
-PKGVER=2
+VER=5.16.2
+MAJORVER=5.16
+PKGVER=1
 PREVIOUS=""
 OS=`tpkg --qenv | grep 'Operating System' | awk '{print $NF}'`
 if echo $OS | egrep 'RedHat|CentOS'
@@ -13,7 +13,7 @@ then
         # Save folks from having to build separate packages for Red Hat and
         # CentOS
         OSMAJOR=`echo $OS | cut -d- -f2`
-        OS="RedHat-$OSMAJOR,CentOS-$OSMAJOR"
+        OS="RedHat-$OSMAJOR, CentOS-$OSMAJOR"
 fi
 ARCH=`tpkg --qenv | grep 'Architecture' | awk '{print $NF}'`
 if [ $ARCH = 'i386' -o $ARCH = 'i686' ]
@@ -27,7 +27,7 @@ tar zxvf $PKG-$VER.tar.gz || exit 1
 cd $PKG-$VER || exit 1
 # I haven't figured out a better way to get the archname that Perl will decide
 # to use.
-sh Configure -dE $use64bitint
+sh Configure -dE $use64bitint || exit 1
 archname=`sh -c '. ./config.sh; echo $archname'`
 if [ -z "$archname" ]
 then
@@ -58,13 +58,13 @@ sh Configure \
 	|| exit 1
 make || exit 1
 pkgdir=`mktemp -d -t tpkg.XXXXXX` || exit 1
-cat ../../tpkg.xml | \
+cat ../../tpkg.yml | \
 	sed "s/NAME/$PKG/" | \
 	sed "s/VERSION/$VER/" | \
 	sed "s/PKGVER/$PKGVER/" | \
 	sed "s/OS/$OS/" | \
-	sed "s/ARCH/$ARCH/" | \
-	grep -v files > $pkgdir/tpkg.xml
+	sed "s/ARCH/$ARCH/" \
+	> $pkgdir/tpkg.yml
 # Install
 make install DESTDIR=$pkgdir/root || exit 1
 # Make directories in the package for supported previous versions so
@@ -81,4 +81,3 @@ tpkg --make $pkgdir || exit 1
 rm -rf $pkgdir
 cd ..
 rm -rf $PKG-$VER
-
